@@ -1,26 +1,44 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Palette */
+  --color-cream: #FAF8F5;
+  --color-terracotta: #E27D60;
+  --color-terracotta-dark: #C9674A;
+  --color-teal: #41B3A3;
+  --color-teal-dark: #339B8C;
+  --color-mint: #85DCBA;
+  --color-peach: #E8A87C;
+  --color-rose: #C38D9E;
+  --color-graphite: #2C2A27;
+  --color-graphite-mid: #6B6662;
+  --color-graphite-light: #9A9693;
+
+  /* Tile backgrounds — lightened pastels */
+  --color-tile-mint: #E2F8EF;
+  --color-tile-peach: #FDF0E3;
+  --color-tile-rose: #F5E8EF;
+  --color-tile-teal: #E1F5F3;
+  --color-tile-cream: #F5F2ED;
+
+  /* Typography */
+  --font-display: var(--font-unbounded);
+  --font-sans: var(--font-inter);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-cream);
+  color: var(--color-graphite);
+}
+
+.tile-shadow {
+  box-shadow: 0 2px 16px rgba(44, 42, 39, 0.07);
 }
