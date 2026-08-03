@@ -54,3 +54,54 @@ body {
 .font-display {
   font-family: 'OssemRounded', sans-serif;
 }
+
+/* ── Hero entrance animations ─────────────────────────────────────────── */
+
+@keyframes hero-tile {
+  from { opacity: 0; transform: translateX(-48px) scale(0.97); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes hero-fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hero-tag {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes sparkle-pop {
+  0%   { opacity: 0; transform: scale(0) rotate(-30deg); }
+  60%  { opacity: 1; transform: scale(1.2) rotate(15deg); }
+  80%  { transform: scale(0.9) rotate(-5deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+@keyframes sparkle-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%       { transform: translateY(-8px) rotate(20deg); }
+}
+
+.hero-tile      { animation: hero-tile     0.55s cubic-bezier(0.22,1,0.36,1) both; }
+.hero-pre       { animation: hero-fade-up  0.4s ease both; animation-delay: 0.35s; }
+.hero-headline  { animation: hero-fade-up  0.5s cubic-bezier(0.22,1,0.36,1) both; animation-delay: 0.5s; }
+.hero-subtitle  { animation: hero-fade-up  0.4s ease both; animation-delay: 0.7s; }
+.hero-buttons   { animation: hero-fade-up  0.4s ease both; animation-delay: 0.85s; }
+
+.hero-sparkle {
+  animation:
+    sparkle-pop   0.5s cubic-bezier(0.22,1,0.36,1) both,
+    sparkle-float 3s ease-in-out infinite;
+}
+.hero-sparkle-1 { animation-delay: 0.9s,  1.4s; }
+.hero-sparkle-2 { animation-delay: 1.05s, 1.55s; }
+.hero-sparkle-3 { animation-delay: 1.15s, 1.65s; }
+
+.hero-tag-1  { animation: hero-tag 0.35s ease both; animation-delay: 1.0s; }
+.hero-tag-2  { animation: hero-tag 0.35s ease both; animation-delay: 1.08s; }
+.hero-tag-3  { animation: hero-tag 0.35s ease both; animation-delay: 1.16s; }
+.hero-tag-4  { animation: hero-tag 0.35s ease both; animation-delay: 1.24s; }
+.hero-tag-5  { animation: hero-tag 0.35s ease both; animation-delay: 1.32s; }
+.hero-tag-6  { animation: hero-tag 0.35s ease both; animation-delay: 1.40s; }
