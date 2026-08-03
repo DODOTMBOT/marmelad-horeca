@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import type { ServicesData, ServiceV2, ServiceModifier } from '@/lib/content-types';
 
 const TILE_BG = ['bg-tile-mint', 'bg-tile-peach', 'bg-tile-rose', 'bg-tile-teal', 'bg-tile-cream'];
@@ -162,7 +163,7 @@ function ModifierInput({
 
 // ── Service card ───────────────────────────────────────────────────────────────
 
-function ServiceCard({ service, bgClass }: { service: ServiceV2; bgClass: string }) {
+export function ServiceCard({ service, bgClass }: { service: ServiceV2; bgClass: string }) {
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState(() => initValues(service));
 
@@ -270,7 +271,7 @@ export default function Services({ content }: { content: ServicesData }) {
 
   return (
     <section id="services" className="max-w-[1560px] mx-auto px-6 md:px-16 py-16">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+      <div className="flex items-end justify-between mb-10 gap-4">
         <div>
           <p className="text-xs uppercase tracking-widest text-graphite-light font-medium mb-3">
             {sectionLabel}
@@ -279,11 +280,19 @@ export default function Services({ content }: { content: ServicesData }) {
             {title}
           </h2>
         </div>
-        <div className="flex items-center gap-3 bg-teal/10 border border-teal/20 rounded-[16px] px-5 py-3 max-w-sm">
+        <Link
+          href="/services"
+          className="shrink-0 border border-graphite/20 hover:border-graphite/40 text-graphite text-sm font-medium px-6 py-2.5 rounded-full transition-colors"
+        >
+          Все услуги →
+        </Link>
+      </div>
+      {honestyBadge && (
+        <div className="flex items-center gap-3 bg-teal/10 border border-teal/20 rounded-[16px] px-5 py-3 max-w-sm mb-8">
           <span className="w-2 h-2 rounded-full bg-teal shrink-0" />
           <p className="text-sm text-graphite leading-snug">{honestyBadge}</p>
         </div>
-      </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         {items.map((service, i) => (
