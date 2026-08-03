@@ -7,7 +7,7 @@ import { SITE_NAME, CTA_LABEL, CONTACTS } from '@/config/constants';
 
 const NAV_LINKS = [
   { label: 'Услуги', href: '#services' },
-  { label: 'Кейсы', href: '#cases' },
+  { label: 'Кейсы', href: '/cases' },
   { label: 'Команда', href: '#team' },
   { label: 'Контакты', href: '#contacts' },
 ];

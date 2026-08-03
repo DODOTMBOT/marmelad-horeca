@@ -150,6 +150,61 @@ export interface ContactsContent {
   successText: string;
 }
 
+// ─── Services V2 ──────────────────────────────────────────────────────────────
+
+export interface PerUnitModifier {
+  id: string;
+  type: 'per_unit';
+  label: string;
+  pricePerUnit: number;
+  unitLabel: string;
+  min: number;
+  max: number;
+  step: number;
+  defaultValue: number;
+}
+
+export interface CheckboxModifier {
+  id: string;
+  type: 'checkbox';
+  label: string;
+  addedPrice: number;
+  defaultChecked: boolean;
+}
+
+export interface SelectOption {
+  id: string;
+  label: string;
+  addedPrice: number;
+}
+
+export interface SelectModifier {
+  id: string;
+  type: 'select';
+  label: string;
+  options: SelectOption[];
+  defaultOptionId: string;
+}
+
+export type ServiceModifier = PerUnitModifier | CheckboxModifier | SelectModifier;
+
+export interface ServiceV2 {
+  id: string;
+  title: string;
+  shortDescription: string;
+  fullDescription: string;
+  tags: string[];
+  basePrice: number;
+  modifiers: ServiceModifier[];
+}
+
+export interface ServicesData {
+  sectionLabel: string;
+  title: string;
+  honestyBadge: string;
+  items: ServiceV2[];
+}
+
 // ─── Layout ───────────────────────────────────────────────────────────────────
 export type SectionId =
   | 'hero' | 'pains' | 'services' | 'clients'

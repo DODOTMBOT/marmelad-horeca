@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'OssemRounded';
+  src: url('/fonts/ossem-rounded.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   /* Palette */
   --color-cream: #FAF8F5;
@@ -22,7 +30,7 @@
   --color-tile-cream: #F5F2ED;
 
   /* Typography */
-  --font-display: var(--font-unbounded);
+  --font-display: OssemRounded, sans-serif;
   --font-sans: var(--font-inter);
 }
 
@@ -41,4 +49,8 @@ body {
 
 .tile-shadow {
   box-shadow: 0 2px 16px rgba(44, 42, 39, 0.07);
+}
+
+.font-display {
+  font-family: 'OssemRounded', sans-serif;
 }

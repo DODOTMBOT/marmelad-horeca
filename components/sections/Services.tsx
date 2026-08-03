@@ -1,57 +1,215 @@
 'use client';
 
 import { useState } from 'react';
-import type { ServicesContent, ServiceItem } from '@/lib/content-types';
-import { calculatePrice, formatPrice, formatPriceResult } from '@/lib/calculator';
+import type { ServicesData, ServiceV2, ServiceModifier } from '@/lib/content-types';
 
 const TILE_BG = ['bg-tile-mint', 'bg-tile-peach', 'bg-tile-rose', 'bg-tile-teal', 'bg-tile-cream'];
 
-function getPriceLabel(service: ServiceItem): string {
-  switch (service.priceType) {
-    case 'fixed': return formatPrice(service.fixedPrice!);
-    case 'per_unit': return `${formatPrice(service.pricePerUnit!)} / ${service.unitLabel}`;
-    case 'select': {
-      const prices = service.params?.[0]?.options?.map((o) => o.price) ?? [];
-      return prices.length ? `от ${formatPrice(Math.min(...prices))}` : '—';
-    }
-    case 'base_plus': return `от ${formatPrice(service.basePrice!)}`;
-    case 'range': return `${formatPrice(service.priceFrom!)} — ${formatPrice(service.priceTo!)}`;
-    default: return '—';
-  }
+function fmt(n: number) {
+  return n.toLocaleString('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 });
 }
 
-function ServiceCard({ service, bgClass }: { service: ServiceItem; bgClass: string }) {
-  const [open, setOpen] = useState(false);
-  const [values, setValues] = useState<Record<string, number | string>>(() => {
-    const init: Record<string, number | string> = {};
-    for (const p of service.params ?? []) init[p.id] = p.defaultValue;
-    return init;
-  });
+type ValMap = Record<string, number | boolean | string>;
 
-  const hasCalculator = (service.params?.length ?? 0) > 0;
-  const result = hasCalculator ? calculatePrice(service as Parameters<typeof calculatePrice>[0], values) : calculatePrice(service as Parameters<typeof calculatePrice>[0], {});
-  const priceDisplay = open && result !== null
-    ? (formatPriceResult(result) ?? getPriceLabel(service))
-    : getPriceLabel(service);
+function initValues(service: ServiceV2): ValMap {
+  const out: ValMap = {};
+  for (const mod of service.modifiers) {
+    if (mod.type === 'per_unit') out[mod.id] = mod.defaultValue;
+    else if (mod.type === 'checkbox') out[mod.id] = mod.defaultChecked;
+    else if (mod.type === 'select') out[mod.id] = mod.defaultOptionId;
+  }
+  return out;
+}
+
+function computeTotal(service: ServiceV2, values: ValMap) {
+  let total = service.basePrice;
+  const breakdown: { label: string; amount: number }[] = [];
+  if (service.basePrice > 0) breakdown.push({ label: 'Базовая цена', amount: service.basePrice });
+
+  for (const mod of service.modifiers) {
+    if (mod.type === 'per_unit') {
+      const qty = (values[mod.id] as number) ?? mod.defaultValue;
+      const amount = mod.pricePerUnit * qty;
+      breakdown.push({ label: `${mod.label} — ${qty} ${mod.unitLabel}`, amount });
+      total += amount;
+    } else if (mod.type === 'checkbox') {
+      if (values[mod.id]) {
+        breakdown.push({ label: mod.label, amount: mod.addedPrice });
+        total += mod.addedPrice;
+      }
+    } else if (mod.type === 'select') {
+      const optId = (values[mod.id] as string) ?? mod.defaultOptionId;
+      const opt = mod.options.find((o) => o.id === optId);
+      if (opt) {
+        if (opt.addedPrice > 0) breakdown.push({ label: opt.label, amount: opt.addedPrice });
+        total += opt.addedPrice;
+      }
+    }
+  }
+
+  return { total, breakdown };
+}
+
+function minPrice(service: ServiceV2): number {
+  let min = service.basePrice;
+  for (const mod of service.modifiers) {
+    if (mod.type === 'per_unit') min += mod.pricePerUnit * mod.min;
+    else if (mod.type === 'select') min += Math.min(...mod.options.map((o) => o.addedPrice));
+  }
+  return min;
+}
+
+// ── Modifier input ─────────────────────────────────────────────────────────────
+
+function ModifierInput({
+  mod,
+  value,
+  onChange,
+}: {
+  mod: ServiceModifier;
+  value: number | boolean | string | undefined;
+  onChange: (v: number | boolean | string) => void;
+}) {
+  if (mod.type === 'per_unit') {
+    const qty = (value as number) ?? mod.defaultValue;
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-xs text-graphite-mid">{mod.label}</span>
+          <span className="text-sm font-medium text-graphite">
+            {qty} {mod.unitLabel}
+          </span>
+        </div>
+        <input
+          type="range"
+          min={mod.min}
+          max={mod.max}
+          step={mod.step}
+          value={qty}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="w-full accent-teal"
+        />
+        <div className="flex justify-between text-xs text-graphite-light mt-1">
+          <span>{mod.min}</span>
+          <span>{mod.max}</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (mod.type === 'checkbox') {
+    const checked = (value as boolean) ?? mod.defaultChecked;
+    return (
+      <label className="flex items-center gap-2.5 cursor-pointer group">
+        <span
+          className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+            checked ? 'bg-teal border-teal' : 'border-graphite/25 group-hover:border-teal/50'
+          }`}
+          onClick={() => onChange(!checked)}
+        >
+          {checked && (
+            <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none">
+              <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </span>
+        <input type="checkbox" className="sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+        <span className="text-sm text-graphite">
+          {mod.label}
+          <span className="text-graphite-light ml-1.5">+{fmt(mod.addedPrice)}</span>
+        </span>
+      </label>
+    );
+  }
+
+  if (mod.type === 'select') {
+    const selected = (value as string) ?? mod.defaultOptionId;
+    return (
+      <div>
+        <p className="text-xs text-graphite-mid mb-2">{mod.label}</p>
+        <div className="flex flex-col gap-1.5">
+          {mod.options.map((opt) => (
+            <label key={opt.id} className="flex items-center gap-2.5 cursor-pointer group">
+              <span
+                className={`w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center transition-colors ${
+                  selected === opt.id ? 'border-teal' : 'border-graphite/25 group-hover:border-teal/50'
+                }`}
+                onClick={() => onChange(opt.id)}
+              >
+                {selected === opt.id && <span className="w-2 h-2 rounded-full bg-teal" />}
+              </span>
+              <input
+                type="radio"
+                className="sr-only"
+                name={mod.id}
+                value={opt.id}
+                checked={selected === opt.id}
+                onChange={() => onChange(opt.id)}
+              />
+              <span className="text-sm text-graphite flex-1">{opt.label}</span>
+              {opt.addedPrice > 0 && (
+                <span className="text-xs text-graphite-light">+{fmt(opt.addedPrice)}</span>
+              )}
+            </label>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+// ── Service card ───────────────────────────────────────────────────────────────
+
+function ServiceCard({ service, bgClass }: { service: ServiceV2; bgClass: string }) {
+  const [open, setOpen] = useState(false);
+  const [values, setValues] = useState(() => initValues(service));
+
+  const hasCalc = service.modifiers.length > 0;
+  const { total, breakdown } = computeTotal(service, values);
+  const priceLabel = hasCalc ? `от ${fmt(minPrice(service))}` : fmt(service.basePrice);
+
+  function setValue(id: string, v: number | boolean | string) {
+    setValues((p) => ({ ...p, [id]: v }));
+  }
+
+  function handleCta() {
+    const el = document.getElementById('contacts');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  }
 
   return (
     <div className={`${bgClass} tile-shadow rounded-[24px] p-6 flex flex-col gap-4`}>
+      {/* Tags + title */}
       <div>
-        <span className="inline-block border border-graphite/15 text-graphite-mid text-xs px-3 py-1 rounded-full mb-3">
-          {service.tag}
-        </span>
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {service.tags.map((tag) => (
+            <span
+              key={tag}
+              className="inline-block border border-graphite/15 text-graphite-mid text-xs px-3 py-1 rounded-full"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
         <h3 className="font-display font-bold text-base md:text-lg uppercase tracking-tight text-graphite leading-snug">
-          {service.name}
+          {service.title}
         </h3>
       </div>
-      <p className="text-sm text-graphite-mid leading-relaxed flex-1">{service.description}</p>
+
+      {/* Description */}
+      <p className="text-sm text-graphite-mid leading-relaxed flex-1">{service.shortDescription}</p>
+
+      {/* Price row */}
       <div className="flex items-end justify-between gap-3 pt-2 border-t border-graphite/8">
         <div>
           <div className="text-xs text-graphite-light mb-1">Стоимость</div>
-          <div className="font-display font-bold text-lg text-terracotta">{priceDisplay}</div>
-          {service.note && <div className="text-xs text-graphite-light mt-1">{service.note}</div>}
+          <div className="font-display font-bold text-lg text-terracotta">
+            {open ? fmt(total) : priceLabel}
+          </div>
         </div>
-        {hasCalculator && (
+        {hasCalc && (
           <button
             onClick={() => setOpen((v) => !v)}
             className="text-xs font-medium text-teal hover:text-terracotta transition-colors whitespace-nowrap underline underline-offset-4"
@@ -61,48 +219,62 @@ function ServiceCard({ service, bgClass }: { service: ServiceItem; bgClass: stri
         )}
       </div>
 
-      {open && service.params && (
-        <div className="border-t border-graphite/10 pt-4 space-y-3">
-          {service.params.map((param) => (
-            <div key={param.id}>
-              <label className="block text-xs text-graphite-mid mb-1.5">{param.label}</label>
-              {param.type === 'number' ? (
-                <input
-                  type="number"
-                  min={param.min ?? 1}
-                  max={param.max}
-                  step={param.step ?? 1}
-                  value={values[param.id] as number}
-                  onChange={(e) => setValues((p) => ({ ...p, [param.id]: Math.max(param.min ?? 0, Number(e.target.value)) }))}
-                  className="w-full border border-graphite/20 rounded-xl px-4 py-2 text-sm text-graphite bg-white/60 focus:outline-none focus:border-teal"
-                />
-              ) : (
-                <select
-                  value={values[param.id] as string}
-                  onChange={(e) => setValues((p) => ({ ...p, [param.id]: e.target.value }))}
-                  className="w-full border border-graphite/20 rounded-xl px-4 py-2 text-sm text-graphite bg-white/60 focus:outline-none focus:border-teal"
-                >
-                  {param.options?.map((opt) => (
-                    <option key={opt.label} value={opt.price}>{opt.label}</option>
-                  ))}
-                </select>
-              )}
+      {/* Calculator */}
+      {open && (
+        <div className="border-t border-graphite/10 pt-4 flex flex-col gap-4">
+          {/* Inputs */}
+          <div className="flex flex-col gap-4">
+            {service.modifiers.map((mod) => (
+              <ModifierInput
+                key={mod.id}
+                mod={mod}
+                value={values[mod.id]}
+                onChange={(v) => setValue(mod.id, v)}
+              />
+            ))}
+          </div>
+
+          {/* Breakdown */}
+          <div className="bg-white/60 rounded-[16px] p-4">
+            {breakdown.map((line, i) => (
+              <div key={i} className="flex items-start justify-between text-sm py-1 gap-3">
+                <span className="text-graphite-mid leading-snug">{line.label}</span>
+                <span className="text-graphite font-medium shrink-0">{fmt(line.amount)}</span>
+              </div>
+            ))}
+            <div className="flex items-center justify-between pt-3 mt-2 border-t border-graphite/10">
+              <span className="font-display font-bold text-sm uppercase tracking-tight text-graphite">
+                Итого
+              </span>
+              <span className="font-display font-bold text-xl text-terracotta">{fmt(total)}</span>
             </div>
-          ))}
+          </div>
+
+          {/* CTA */}
+          <button
+            onClick={handleCta}
+            className="w-full bg-terracotta hover:bg-terracotta-dark text-white font-medium py-3 rounded-full transition-colors text-sm"
+          >
+            Оставить заявку
+          </button>
         </div>
       )}
     </div>
   );
 }
 
-export default function Services({ content }: { content: ServicesContent }) {
+// ── Section ────────────────────────────────────────────────────────────────────
+
+export default function Services({ content }: { content: ServicesData }) {
   const { sectionLabel, title, honestyBadge, items } = content;
 
   return (
     <section id="services" className="max-w-[1560px] mx-auto px-6 md:px-16 py-16">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
         <div>
-          <p className="text-xs uppercase tracking-widest text-graphite-light font-medium mb-3">{sectionLabel}</p>
+          <p className="text-xs uppercase tracking-widest text-graphite-light font-medium mb-3">
+            {sectionLabel}
+          </p>
           <h2 className="font-display font-bold text-3xl md:text-5xl uppercase tracking-tight text-graphite whitespace-pre-line">
             {title}
           </h2>
