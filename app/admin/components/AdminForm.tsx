@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useRef } from 'react';
 
 // ─── Shared wrapper ───────────────────────────────────────────────────────────
 interface AdminFormProps {
@@ -181,6 +181,120 @@ export function TagEditor({ label, hint, tags, onChange }: TagEditorProps) {
           className="flex-1 border border-graphite/20 rounded-xl px-4 py-2 text-sm text-graphite bg-white focus:outline-none focus:border-teal"
         />
         <button type="button" onClick={add} className="text-sm text-teal font-medium px-3">+ Добавить</button>
+      </div>
+    </Field>
+  );
+}
+
+// ─── Hex color picker ─────────────────────────────────────────────────────────
+const HEX_PRESETS = [
+  { hex: '#E2F8EF', label: 'Мятный' },
+  { hex: '#FDF0E3', label: 'Персик' },
+  { hex: '#F5E8EF', label: 'Роза' },
+  { hex: '#E1F5F3', label: 'Бирюза' },
+  { hex: '#F5F2ED', label: 'Кремовый' },
+  { hex: '#E27D60', label: 'Терракота' },
+  { hex: '#2C2A27', label: 'Графит' },
+  { hex: '#C0392B', label: 'Красный' },
+  { hex: '#1B3A6B', label: 'Синий' },
+  { hex: '#1A5276', label: 'Тёмно-синий' },
+  { hex: '#145A32', label: 'Зелёный' },
+  { hex: '#6C3483', label: 'Фиолет' },
+];
+
+interface HexColorPickerProps {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}
+export function HexColorPicker({ label, value, onChange }: HexColorPickerProps) {
+  const [input, setInput] = useState(value);
+  return (
+    <Field label={label}>
+      <div className="flex flex-wrap gap-2 mb-3">
+        {HEX_PRESETS.map((c) => (
+          <button
+            key={c.hex}
+            type="button"
+            title={c.label}
+            onClick={() => { onChange(c.hex); setInput(c.hex); }}
+            className="w-8 h-8 rounded-full border-2 transition-all"
+            style={{
+              backgroundColor: c.hex,
+              borderColor: value === c.hex ? '#2C2A27' : 'transparent',
+              boxShadow: value === c.hex ? '0 0 0 1px #2C2A27' : 'none',
+            }}
+          />
+        ))}
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full border border-graphite/20 shrink-0" style={{ backgroundColor: value }} />
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onBlur={() => { if (/^#[0-9a-fA-F]{6}$/.test(input)) onChange(input); }}
+          placeholder="#000000"
+          className="w-32 border border-graphite/20 rounded-xl px-3 py-2 text-sm text-graphite bg-white focus:outline-none focus:border-teal font-mono"
+        />
+        <span className="text-xs text-graphite-light">или введите hex</span>
+      </div>
+    </Field>
+  );
+}
+
+// ─── Logo upload ──────────────────────────────────────────────────────────────
+interface LogoUploadProps {
+  label: string;
+  value: string;
+  onChange: (url: string) => void;
+  folder?: string;
+}
+export function LogoUpload({ label, value, onChange, folder = 'uploads' }: LogoUploadProps) {
+  const [uploading, setUploading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('folder', folder);
+    const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+    const { url } = await res.json();
+    onChange(url);
+    setUploading(false);
+  }
+
+  return (
+    <Field label={label}>
+      <div className="flex items-center gap-4">
+        {value ? (
+          <div className="w-24 h-12 bg-graphite/5 rounded-xl border border-graphite/10 flex items-center justify-center p-2">
+            <img src={value} alt="" className="max-h-full max-w-full object-contain" />
+          </div>
+        ) : (
+          <div className="w-24 h-12 bg-graphite/5 rounded-xl border border-dashed border-graphite/20 flex items-center justify-center">
+            <span className="text-xs text-graphite-light">нет</span>
+          </div>
+        )}
+        <div className="flex flex-col gap-1.5">
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            className="text-sm text-teal hover:text-terracotta transition-colors font-medium disabled:opacity-50"
+          >
+            {uploading ? 'Загрузка…' : value ? 'Заменить' : 'Загрузить PNG'}
+          </button>
+          {value && (
+            <button type="button" onClick={() => onChange('')} className="text-xs text-graphite-light hover:text-terracotta transition-colors">
+              Удалить лого
+            </button>
+          )}
+        </div>
+        <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
       </div>
     </Field>
   );

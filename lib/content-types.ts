@@ -84,10 +84,12 @@ export interface ClientsContent {
 // ─── Cases ────────────────────────────────────────────────────────────────────
 export interface CaseItem {
   client: string;
-  task: string;
-  whatWeDid: string;
-  result: string;
-  bg: string;
+  logoPath?: string;
+  bg: string;          // hex color, e.g. "#CC2222"
+  result: string;      // e.g. "+23%"
+  resultLabel?: string; // e.g. "рост выручки"
+  description: string;
+  tags: string[];
 }
 
 export interface CasesContent {

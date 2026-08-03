@@ -1,42 +1,93 @@
 import Link from 'next/link';
 import type { CasesContent, CaseItem } from '@/lib/content-types';
 
-export function CaseCard({ c, i }: { c: CaseItem; i: number }) {
-  const isEmpty = !c.client && !c.task && !c.result;
+function isColorDark(hex: string): boolean {
+  const h = hex.replace('#', '');
+  if (h.length < 6) return false;
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 < 160;
+}
+
+export function CaseCard({ c }: { c: CaseItem }) {
+  const isEmpty = !c.result && !c.description && !c.client;
+  const dark = isColorDark(c.bg || '#F5F2ED');
+  const textMain = dark ? 'text-white' : 'text-graphite';
+  const textMuted = dark ? 'text-white/70' : 'text-graphite-mid';
+  const tagStyle = dark
+    ? 'border-white/30 text-white/90'
+    : 'border-graphite/20 text-graphite-mid';
+
   return (
-    <div className={`bg-${c.bg} tile-shadow rounded-[24px] p-7 min-h-[280px] flex flex-col justify-between`}>
+    <div
+      className="rounded-[24px] p-7 flex flex-col min-h-[380px]"
+      style={{ backgroundColor: c.bg || '#F5F2ED' }}
+    >
       {isEmpty ? (
-        <>
+        <div className="flex-1 flex flex-col justify-between">
           <div className="space-y-3">
             <span className="inline-block border border-graphite/15 text-graphite-light text-xs px-3 py-1 rounded-full">
               Скоро
             </span>
-            <div className="h-4 bg-graphite/10 rounded-full w-3/4" />
-            <div className="h-4 bg-graphite/10 rounded-full w-1/2" />
+            <div className="h-10 bg-graphite/8 rounded-2xl w-2/3 mt-4" />
+            <div className="h-4 bg-graphite/6 rounded-full w-3/4" />
+            <div className="h-4 bg-graphite/6 rounded-full w-1/2" />
           </div>
-          <div className="border-t border-graphite/10 pt-4">
-            <div className="font-display font-bold text-2xl text-graphite/20 uppercase">— %</div>
-            <div className="text-xs text-graphite-light mt-1">результат</div>
+          <div className="flex gap-2 mt-6">
+            <div className="h-7 w-16 bg-graphite/8 rounded-full" />
+            <div className="h-7 w-20 bg-graphite/8 rounded-full" />
           </div>
-        </>
+        </div>
       ) : (
         <>
-          <div className="space-y-2">
-            <span className="inline-block border border-graphite/15 text-graphite-mid text-xs px-3 py-1 rounded-full">
-              {c.client}
-            </span>
-            {c.task && (
-              <p className="font-display font-bold text-base uppercase tracking-tight text-graphite leading-snug">
-                {c.task}
-              </p>
-            )}
-            {c.whatWeDid && (
-              <p className="text-sm text-graphite-mid leading-relaxed whitespace-pre-line">{c.whatWeDid}</p>
-            )}
-          </div>
+          {/* Logo */}
+          {c.logoPath && (
+            <div className="mb-5 h-10 flex items-center">
+              <img
+                src={c.logoPath}
+                alt={c.client}
+                className="max-h-10 max-w-[140px] object-contain object-left"
+                style={{ mixBlendMode: dark ? 'luminosity' : 'multiply' }}
+              />
+            </div>
+          )}
+
+          {/* Result metric */}
           {c.result && (
-            <div className="border-t border-graphite/10 pt-4">
-              <div className="font-display font-bold text-2xl text-graphite uppercase">{c.result}</div>
+            <div className="mb-4">
+              <div className={`font-display font-bold text-5xl md:text-6xl leading-none ${textMain}`}>
+                {c.result}
+              </div>
+              {c.resultLabel && (
+                <div className={`text-sm mt-1.5 flex items-center gap-1.5 ${textMuted}`}>
+                  {c.resultLabel}
+                  <svg className="w-3.5 h-3.5 opacity-60" viewBox="0 0 14 14" fill="none">
+                    <path d="M7 2v10M3 6l4-4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Description */}
+          {c.description && (
+            <p className={`text-sm leading-relaxed flex-1 whitespace-pre-line ${textMuted}`}>
+              {c.description}
+            </p>
+          )}
+
+          {/* Tags */}
+          {c.tags && c.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-6">
+              {c.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className={`text-xs px-3 py-1.5 rounded-full border ${tagStyle}`}
+                >
+                  {tag}
+                </span>
+              ))}
             </div>
           )}
         </>
@@ -63,9 +114,9 @@ export default function Cases({ content }: { content: CasesContent }) {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
         {items.map((c, i) => (
-          <CaseCard key={i} c={c} i={i} />
+          <CaseCard key={i} c={c} />
         ))}
       </div>
     </section>
