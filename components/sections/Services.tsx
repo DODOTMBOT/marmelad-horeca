@@ -202,6 +202,64 @@ export function ServiceCard({ service, bgClass }: { service: ServiceV2; bgClass:
       {/* Description */}
       <p className="text-sm text-graphite-mid leading-relaxed flex-1">{service.shortDescription}</p>
 
+      {/* Meta: срок + правки */}
+      {(service.timeline || service.revisions) && (
+        <div className="flex flex-wrap gap-2">
+          {service.timeline && (
+            <span className="inline-flex items-center gap-1.5 text-xs bg-white/60 border border-graphite/10 text-graphite-mid px-3 py-1.5 rounded-full">
+              <svg className="w-3 h-3 opacity-60" viewBox="0 0 14 14" fill="none">
+                <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.2"/>
+                <path d="M7 4v3.5l2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
+              {service.timeline}
+            </span>
+          )}
+          {service.revisions && (
+            <span className="inline-flex items-center gap-1.5 text-xs bg-white/60 border border-graphite/10 text-graphite-mid px-3 py-1.5 rounded-full">
+              <svg className="w-3 h-3 opacity-60" viewBox="0 0 14 14" fill="none">
+                <path d="M2 7a5 5 0 1 0 5-5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                <path d="M2 4v3h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              {service.revisions}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Deliverables */}
+      {service.deliverables && service.deliverables.length > 0 && (
+        <div className="border-t border-graphite/8 pt-3">
+          <p className="text-xs font-medium text-graphite mb-2">Что вы получите</p>
+          <ul className="flex flex-col gap-1.5">
+            {service.deliverables.map((item, i) => (
+              <li key={i} className="flex items-start gap-2 text-xs text-graphite-mid">
+                <svg className="w-3.5 h-3.5 text-teal shrink-0 mt-0.5" viewBox="0 0 14 14" fill="none">
+                  <path d="M2.5 7l3 3 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Excludes */}
+      {service.excludes && service.excludes.length > 0 && (
+        <div className="border-t border-graphite/8 pt-3">
+          <p className="text-xs font-medium text-graphite-light mb-2">Не входит</p>
+          <ul className="flex flex-col gap-1.5">
+            {service.excludes.map((item, i) => (
+              <li key={i} className="flex items-start gap-2 text-xs text-graphite-light">
+                <svg className="w-3 h-3 shrink-0 mt-0.5 opacity-50" viewBox="0 0 12 12" fill="none">
+                  <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                </svg>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Price row */}
       <div className="flex items-end justify-between gap-3 pt-2 border-t border-graphite/8">
         <div>

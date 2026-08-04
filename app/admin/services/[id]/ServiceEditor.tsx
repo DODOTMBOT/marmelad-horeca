@@ -32,12 +32,81 @@ function emptyMod(type: 'per_unit' | 'checkbox' | 'select'): ServiceModifier {
 const inputCls =
   'w-full border border-graphite/20 rounded-xl px-3 py-2 text-sm text-graphite bg-white focus:outline-none focus:border-teal transition-colors';
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <label className="block">
+    <div>
       <span className="text-xs text-graphite-light block mb-1">{label}</span>
+      {hint && <p className="text-xs text-graphite-light/70 mb-1.5">{hint}</p>}
       {children}
-    </label>
+    </div>
+  );
+}
+
+function ListEditor({
+  label,
+  hint,
+  items,
+  placeholder,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  items: string[];
+  placeholder?: string;
+  onChange: (items: string[]) => void;
+}) {
+  const [input, setInput] = useState('');
+
+  function add() {
+    const v = input.trim();
+    if (v) { onChange([...items, v]); setInput(''); }
+  }
+
+  function update(i: number, v: string) {
+    onChange(items.map((item, j) => (j === i ? v : item)));
+  }
+
+  function remove(i: number) {
+    onChange(items.filter((_, j) => j !== i));
+  }
+
+  return (
+    <Field label={label} hint={hint}>
+      <div className="flex flex-col gap-2">
+        {items.map((item, i) => (
+          <div key={i} className="flex gap-2 items-center">
+            <input
+              className="flex-1 border border-graphite/20 rounded-xl px-3 py-2 text-sm text-graphite bg-white focus:outline-none focus:border-teal"
+              value={item}
+              onChange={(e) => update(i, e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => remove(i)}
+              className="text-graphite-light hover:text-red-500 transition-colors text-xl leading-none shrink-0 px-1"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+        <div className="flex gap-2">
+          <input
+            className="flex-1 border border-graphite/20 rounded-xl px-3 py-2 text-sm text-graphite bg-white focus:outline-none focus:border-teal"
+            placeholder={placeholder ?? 'Добавить строку…'}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }}
+          />
+          <button
+            type="button"
+            onClick={add}
+            className="text-sm text-teal hover:text-terracotta transition-colors font-medium px-3 shrink-0"
+          >
+            + Добавить
+          </button>
+        </div>
+      </div>
+    </Field>
   );
 }
 
@@ -403,6 +472,41 @@ export default function ServiceEditor({
             onChange={(e) => set('basePrice', Number(e.target.value))}
           />
         </Field>
+
+        <div className="grid grid-cols-2 gap-5">
+          <Field label="Срок" hint="Напр. «3–5 рабочих дней»">
+            <input
+              className={inputCls}
+              placeholder="3–5 рабочих дней"
+              value={svc.timeline ?? ''}
+              onChange={(e) => set('timeline', e.target.value)}
+            />
+          </Field>
+          <Field label="Правки" hint="Напр. «2 раунда правок»">
+            <input
+              className={inputCls}
+              placeholder="2 раунда правок"
+              value={svc.revisions ?? ''}
+              onChange={(e) => set('revisions', e.target.value)}
+            />
+          </Field>
+        </div>
+
+        <ListEditor
+          label="Что вы получите"
+          hint="Каждая строка — отдельный пункт списка"
+          items={svc.deliverables ?? []}
+          placeholder="Например: Детальный отчёт с рекомендациями"
+          onChange={(v) => set('deliverables', v)}
+        />
+
+        <ListEditor
+          label="Не входит"
+          hint="Что явно не включено в эту услугу"
+          items={svc.excludes ?? []}
+          placeholder="Например: Обучение персонала"
+          onChange={(v) => set('excludes', v)}
+        />
 
         {/* Modifiers section */}
         <div>

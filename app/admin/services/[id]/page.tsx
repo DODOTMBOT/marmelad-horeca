@@ -24,6 +24,10 @@ export default async function ServiceEditPage({
       tags: [],
       basePrice: 0,
       modifiers: [],
+      deliverables: [],
+      timeline: '',
+      revisions: '',
+      excludes: [],
     };
   } else {
     const found = data.items.find((s) => s.id === id);

@@ -198,6 +198,10 @@ export interface ServiceV2 {
   tags: string[];
   basePrice: number;
   modifiers: ServiceModifier[];
+  deliverables: string[];   // "Что вы получите"
+  timeline?: string;        // "Срок"
+  revisions?: string;       // "Правки"
+  excludes: string[];       // "Не входит"
 }
 
 export interface ServicesData {
