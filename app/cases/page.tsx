@@ -32,7 +32,7 @@ export default function CasesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-stretch">
             {filled.map((c, i) => (
-              <CaseCard key={i} c={c} />
+              <CaseCard key={i} c={c} i={i} />
             ))}
           </div>
         )}

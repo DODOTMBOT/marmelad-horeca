@@ -10,7 +10,7 @@ function isColorDark(hex: string): boolean {
   return (r * 299 + g * 587 + b * 114) / 1000 < 160;
 }
 
-export function CaseCard({ c }: { c: CaseItem }) {
+export function CaseCard({ c, i = 0 }: { c: CaseItem; i?: number }) {
   const isEmpty = !c.result && !c.description && !c.client;
   const dark = isColorDark(c.bg || '#F5F2ED');
   const textMain = dark ? 'text-white' : 'text-graphite';
@@ -19,10 +19,12 @@ export function CaseCard({ c }: { c: CaseItem }) {
     ? 'border-white/30 text-white/90'
     : 'border-graphite/20 text-graphite-mid';
 
+  const cardDelay = `${i * 0.18}s`;
+
   return (
     <div
-      className="rounded-[24px] p-7 flex flex-col min-h-[380px]"
-      style={{ backgroundColor: c.bg || '#F5F2ED' }}
+      className="case-card rounded-[24px] p-7 flex flex-col min-h-[380px] relative overflow-hidden"
+      style={{ backgroundColor: c.bg || '#F5F2ED', '--card-delay': cardDelay } as React.CSSProperties}
     >
       {isEmpty ? (
         <div className="flex-1 flex flex-col justify-between">
@@ -41,9 +43,17 @@ export function CaseCard({ c }: { c: CaseItem }) {
         </div>
       ) : (
         <>
+          {/* Sparkle */}
+          <span className="case-sparkle absolute top-5 right-6 pointer-events-none select-none" aria-hidden
+            style={{ color: dark ? 'rgba(255,255,255,0.35)' : 'rgba(226,125,96,0.4)' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L13.5 10.5L22 12L13.5 13.5L12 22L10.5 13.5L2 12L10.5 10.5Z"/>
+            </svg>
+          </span>
+
           {/* Logo */}
           {c.logoPath && (
-            <div className="mb-5 h-10 flex items-center">
+            <div className="case-logo mb-5 h-10 flex items-center">
               <img
                 src={c.logoPath}
                 alt={c.client}
@@ -55,7 +65,7 @@ export function CaseCard({ c }: { c: CaseItem }) {
 
           {/* Result metric */}
           {c.result && (
-            <div className="mb-4">
+            <div className="case-result mb-4">
               <div className={`font-display font-bold text-5xl md:text-6xl leading-none ${textMain}`}>
                 {c.result}
               </div>
@@ -72,14 +82,14 @@ export function CaseCard({ c }: { c: CaseItem }) {
 
           {/* Description */}
           {c.description && (
-            <p className={`text-sm leading-relaxed flex-1 whitespace-pre-line ${textMuted}`}>
+            <p className={`case-desc text-sm leading-relaxed flex-1 whitespace-pre-line ${textMuted}`}>
               {c.description}
             </p>
           )}
 
           {/* Tags */}
           {c.tags && c.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-6">
+            <div className="case-tags flex flex-wrap gap-2 mt-6">
               {c.tags.map((tag) => (
                 <span
                   key={tag}
@@ -116,7 +126,7 @@ export default function Cases({ content }: { content: CasesContent }) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
         {items.map((c, i) => (
-          <CaseCard key={i} c={c} />
+          <CaseCard key={i} c={c} i={i} />
         ))}
       </div>
     </section>
