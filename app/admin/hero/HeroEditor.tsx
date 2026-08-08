@@ -53,12 +53,32 @@ export default function HeroEditor({ initial }: { initial: HeroContent }) {
       </div>
 
       <TextArea
-        label="Текст плитки-факта"
-        hint="\\n для переноса"
+        label="Заголовок боковой плитки"
+        hint="\\n для переноса строки"
         rows={3}
         value={d.factTitle}
         onChange={(e) => set('factTitle', e.target.value)}
       />
+      <TextArea
+        label="Текст боковой плитки"
+        hint="Описание под заголовком"
+        rows={4}
+        value={d.factText ?? ''}
+        onChange={(e) => set('factText', e.target.value)}
+      />
+      <div className="grid grid-cols-2 gap-4">
+        <Input
+          label="Текст кнопки в плитке"
+          value={d.factCtaLabel ?? ''}
+          onChange={(e) => set('factCtaLabel', e.target.value)}
+        />
+        <Input
+          label="Ссылка кнопки"
+          hint="Напр. #services или /calculator"
+          value={d.factCtaHref ?? ''}
+          onChange={(e) => set('factCtaHref', e.target.value)}
+        />
+      </div>
 
       <TagEditor
         label="Теги HoReCa-форматов"

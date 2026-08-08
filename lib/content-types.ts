@@ -7,6 +7,9 @@ export interface HeroContent {
   badgeNumber: string;
   badgeLabel: string;
   factTitle: string;
+  factText?: string;
+  factCtaLabel?: string;
+  factCtaHref?: string;
   tags: string[];
   mainTileBg: string;
   factTileBg: string;

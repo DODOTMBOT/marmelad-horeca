@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useRef } from 'react';
+import { useState, useTransition, useRef, useEffect } from 'react';
 
 // ─── Shared wrapper ───────────────────────────────────────────────────────────
 interface AdminFormProps {
@@ -106,15 +106,20 @@ export function TextArea({ label, hint, rows = 3, ...props }: TextAreaProps) {
   );
 }
 
-// ─── Color swatch picker ──────────────────────────────────────────────────────
-const PALETTE: { id: string; label: string; hex: string }[] = [
-  { id: 'tile-mint',   label: 'Мятный',      hex: '#E2F8EF' },
-  { id: 'tile-peach',  label: 'Персиковый',  hex: '#FDF0E3' },
-  { id: 'tile-rose',   label: 'Розовый',     hex: '#F5E8EF' },
-  { id: 'tile-teal',   label: 'Бирюзовый',   hex: '#E1F5F3' },
-  { id: 'tile-cream',  label: 'Кремовый',    hex: '#F5F2ED' },
-  { id: 'terracotta',  label: 'Терракота',   hex: '#E27D60' },
-  { id: 'graphite',    label: 'Графит',      hex: '#2C2A27' },
+// ─── Free hex color picker (used for both tiles and cases) ───────────────────
+const COLOR_PRESETS = [
+  { hex: '#E2F8EF', label: 'Мятный' },
+  { hex: '#FDF0E3', label: 'Персик' },
+  { hex: '#F5E8EF', label: 'Роза' },
+  { hex: '#E1F5F3', label: 'Бирюза' },
+  { hex: '#F5F2ED', label: 'Кремовый' },
+  { hex: '#E27D60', label: 'Терракота' },
+  { hex: '#2C2A27', label: 'Графит' },
+  { hex: '#C0392B', label: 'Красный' },
+  { hex: '#1B3A6B', label: 'Синий' },
+  { hex: '#1A5276', label: 'Тёмно-синий' },
+  { hex: '#145A32', label: 'Зелёный' },
+  { hex: '#6C3483', label: 'Фиолет' },
 ];
 
 interface ColorPickerProps {
@@ -122,31 +127,60 @@ interface ColorPickerProps {
   value: string;
   onChange: (v: string) => void;
 }
-export function ColorPicker({ label, value, onChange }: ColorPickerProps) {
+
+function FreeColorPicker({ label, value, onChange }: ColorPickerProps) {
+  const [input, setInput] = useState(value);
+  useEffect(() => setInput(value), [value]);
+
+  const safeHex = /^#[0-9a-fA-F]{6}$/.test(value) ? value : '#F5F2ED';
+
   return (
     <Field label={label}>
+      <div className="flex items-center gap-3 mb-3">
+        <label className="relative cursor-pointer shrink-0" title="Открыть палитру">
+          <div
+            className="w-10 h-10 rounded-xl border-2 border-graphite/20"
+            style={{ backgroundColor: safeHex }}
+          />
+          <input
+            type="color"
+            value={safeHex}
+            onChange={(e) => { onChange(e.target.value); setInput(e.target.value); }}
+            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+          />
+        </label>
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onBlur={() => { if (/^#[0-9a-fA-F]{6}$/.test(input)) onChange(input); }}
+          onKeyDown={(e) => { if (e.key === 'Enter' && /^#[0-9a-fA-F]{6}$/.test(input)) onChange(input); }}
+          placeholder="#000000"
+          className="w-28 border border-graphite/20 rounded-xl px-3 py-2 text-sm text-graphite bg-white focus:outline-none focus:border-teal font-mono"
+        />
+        <span className="text-xs text-graphite-light">или выберите из пресетов ↓</span>
+      </div>
       <div className="flex flex-wrap gap-2">
-        {PALETTE.map((c) => (
+        {COLOR_PRESETS.map((c) => (
           <button
-            key={c.id}
+            key={c.hex}
             type="button"
             title={c.label}
-            onClick={() => onChange(c.id)}
-            className="w-8 h-8 rounded-full border-2 transition-all"
+            onClick={() => { onChange(c.hex); setInput(c.hex); }}
+            className="w-7 h-7 rounded-full border-2 transition-all"
             style={{
               backgroundColor: c.hex,
-              borderColor: value === c.id ? '#2C2A27' : 'transparent',
-              boxShadow: value === c.id ? '0 0 0 1px #2C2A27' : 'none',
+              borderColor: value === c.hex ? '#2C2A27' : 'transparent',
+              boxShadow: value === c.hex ? '0 0 0 1px #2C2A27' : 'none',
             }}
           />
         ))}
-        <span className="text-xs text-graphite-light self-center ml-1">
-          {PALETTE.find((c) => c.id === value)?.label ?? value}
-        </span>
       </div>
     </Field>
   );
 }
+
+export function ColorPicker(props: ColorPickerProps) { return <FreeColorPicker {...props} />; }
 
 // ─── Tag list editor ──────────────────────────────────────────────────────────
 interface TagEditorProps {
@@ -186,62 +220,12 @@ export function TagEditor({ label, hint, tags, onChange }: TagEditorProps) {
   );
 }
 
-// ─── Hex color picker ─────────────────────────────────────────────────────────
-const HEX_PRESETS = [
-  { hex: '#E2F8EF', label: 'Мятный' },
-  { hex: '#FDF0E3', label: 'Персик' },
-  { hex: '#F5E8EF', label: 'Роза' },
-  { hex: '#E1F5F3', label: 'Бирюза' },
-  { hex: '#F5F2ED', label: 'Кремовый' },
-  { hex: '#E27D60', label: 'Терракота' },
-  { hex: '#2C2A27', label: 'Графит' },
-  { hex: '#C0392B', label: 'Красный' },
-  { hex: '#1B3A6B', label: 'Синий' },
-  { hex: '#1A5276', label: 'Тёмно-синий' },
-  { hex: '#145A32', label: 'Зелёный' },
-  { hex: '#6C3483', label: 'Фиолет' },
-];
-
 interface HexColorPickerProps {
   label: string;
   value: string;
   onChange: (v: string) => void;
 }
-export function HexColorPicker({ label, value, onChange }: HexColorPickerProps) {
-  const [input, setInput] = useState(value);
-  return (
-    <Field label={label}>
-      <div className="flex flex-wrap gap-2 mb-3">
-        {HEX_PRESETS.map((c) => (
-          <button
-            key={c.hex}
-            type="button"
-            title={c.label}
-            onClick={() => { onChange(c.hex); setInput(c.hex); }}
-            className="w-8 h-8 rounded-full border-2 transition-all"
-            style={{
-              backgroundColor: c.hex,
-              borderColor: value === c.hex ? '#2C2A27' : 'transparent',
-              boxShadow: value === c.hex ? '0 0 0 1px #2C2A27' : 'none',
-            }}
-          />
-        ))}
-      </div>
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full border border-graphite/20 shrink-0" style={{ backgroundColor: value }} />
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onBlur={() => { if (/^#[0-9a-fA-F]{6}$/.test(input)) onChange(input); }}
-          placeholder="#000000"
-          className="w-32 border border-graphite/20 rounded-xl px-3 py-2 text-sm text-graphite bg-white focus:outline-none focus:border-teal font-mono"
-        />
-        <span className="text-xs text-graphite-light">или введите hex</span>
-      </div>
-    </Field>
-  );
-}
+export function HexColorPicker(props: HexColorPickerProps) { return <FreeColorPicker {...props} />; }
 
 // ─── Logo upload ──────────────────────────────────────────────────────────────
 interface LogoUploadProps {

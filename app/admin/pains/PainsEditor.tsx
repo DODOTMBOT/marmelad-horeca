@@ -15,7 +15,7 @@ export default function PainsEditor({ initial }: { initial: PainsContent }) {
     }));
   }
   function addItem() {
-    setD((p) => ({ ...p, items: [...p.items, { text: '', bg: 'tile-cream' }] }));
+    setD((p) => ({ ...p, items: [...p.items, { text: '', bg: '#F5F2ED' }] }));
   }
   function removeItem(i: number) {
     setD((p) => ({ ...p, items: p.items.filter((_, j) => j !== i) }));

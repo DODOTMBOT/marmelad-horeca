@@ -1,5 +1,12 @@
 import type { PainsContent } from '@/lib/content-types';
 
+const LEGACY_TILE_HEX: Record<string, string> = {
+  'tile-mint': '#E2F8EF', 'tile-peach': '#FDF0E3', 'tile-rose': '#F5E8EF',
+  'tile-teal': '#E1F5F3', 'tile-cream': '#F5F2ED', 'terracotta': '#E27D60',
+  'graphite': '#2C2A27',
+};
+function resolveBg(v: string) { return v?.startsWith('#') ? v : (LEGACY_TILE_HEX[v] ?? '#F5F2ED'); }
+
 export default function Pains({ content }: { content: PainsContent }) {
   const { sectionLabel, title, items } = content;
 
@@ -18,9 +25,10 @@ export default function Pains({ content }: { content: PainsContent }) {
         {items.map((item, i) => (
           <div
             key={i}
-            className={`bg-${item.bg} tile-shadow rounded-[24px] p-7 flex flex-col justify-between min-h-[180px] ${
+            className={`tile-shadow rounded-[24px] p-7 flex flex-col justify-between min-h-[180px] ${
               i === items.length - 1 && items.length % 3 !== 0 ? 'sm:col-span-2 xl:col-span-1' : ''
             }`}
+            style={{ backgroundColor: resolveBg(item.bg) }}
           >
             {item.label && (
               <span className="inline-block border border-graphite/20 text-graphite-mid text-xs px-3 py-1 rounded-full self-start mb-4">
